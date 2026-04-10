@@ -1,21 +1,41 @@
-let currentQ = "Q1";
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec"
+};
+
+let questions = [];
+let currentIndex = 0;
+let emailGlobal = "";
 
 function startTest() {
-  let email = document.getElementById("email").value;
+  emailGlobal = document.getElementById("email").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbzLpUQf5apc0RLQkNYEn9j7OixK2SlZr1UE8eOf1jVEO3l6BsIsI51_5AjntWPxQhuYyg/exec", {
+  fetch(CONFIG.API_URL, {
+    method: "POST",
+    body: JSON.stringify({ action: "getQuestions" })
+  })
+  .then(res => res.json())
+  .then(qList => {
+    questions = qList;
+    loadQuestion();
+  });
+}
+
+function loadQuestion() {
+  let qid = questions[currentIndex];
+
+  fetch(CONFIG.API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "start",
-      email: email,
-      qid: currentQ
+      email: emailGlobal,
+      qid: qid
     })
   })
   .then(res => res.json())
   .then(data => {
 
     if (!data.allowed) {
-      alert("Not approved or already attempted");
+      alert("Not allowed or already attempted");
       return;
     }
 
@@ -24,7 +44,7 @@ function startTest() {
 
     let sampleHTML = "";
     data.samples.forEach(s => {
-      sampleHTML += `<p>Input: ${s.input} → Output: ${s.output}</p>`;
+      sampleHTML += `<p>${s.input} → ${s.output}</p>`;
     });
 
     document.getElementById("samples").innerHTML = sampleHTML;
@@ -33,50 +53,38 @@ function startTest() {
   });
 }
 
-function startTimer(minutes) {
-  let time = minutes * 60;
-
-  const timer = setInterval(() => {
-    let min = Math.floor(time / 60);
-    let sec = time % 60;
-
-    document.getElementById("timer").innerText =
-      min + ":" + (sec < 10 ? "0" : "") + sec;
-
-    if (time <= 0) {
-      clearInterval(timer);
-      autoSubmit();
-    }
-
-    time--;
-  }, 1000);
-}
-
 function submitCode() {
-  let email = document.getElementById("email").value;
   let code = document.getElementById("code").value;
   let lang = document.getElementById("language").value;
 
-  fetch("YOUR_WEBAPP_URL", {
+  let qid = questions[currentIndex];
+
+  fetch(CONFIG.API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "submit",
-      email: email,
-      qid: currentQ,
+      email: emailGlobal,
+      qid: qid,
       code: code,
       language: lang
     })
   })
   .then(res => res.json())
   .then(data => {
+
     if (data.error) {
       alert(data.error);
+      return;
+    }
+
+    alert(`Marks: ${data.marks}/${data.total}`);
+
+    currentIndex++;
+
+    if (currentIndex < questions.length) {
+      loadQuestion();
     } else {
-      alert("Marks: " + data.marks + "/" + data.total);
+      alert("Test Completed 🎉");
     }
   });
-}
-
-function autoSubmit() {
-  submitCode();
 }
