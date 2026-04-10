@@ -3,7 +3,7 @@ let currentQ = "Q1";
 function startTest() {
   let email = document.getElementById("email").value;
 
-  fetch("YOUR_WEBAPP_URL", {
+  fetch("https://script.google.com/macros/s/AKfycbzLpUQf5apc0RLQkNYEn9j7OixK2SlZr1UE8eOf1jVEO3l6BsIsI51_5AjntWPxQhuYyg/exec", {
     method: "POST",
     body: JSON.stringify({
       action: "start",
