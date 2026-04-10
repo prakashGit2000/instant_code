@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prakash Sir Coding Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>Coding Test</h2>
+
+  <input type="email" id="email" placeholder="Enter Email">
+  <button onclick="startTest()">Start</button>
+
+  <div id="questionBox" class="hidden">
+    <h3 id="question"></h3>
+
+    <div id="samples"></div>
+
+    <select id="language">
+      <option value="java">Java</option>
+      <option value="python3">Python</option>
+      <option value="cpp17">C++</option>
+    </select>
+
+    <textarea id="code" placeholder="Write your code here..."></textarea>
+
+    <div id="timer"></div>
+
+    <button id="submitBtn" onclick="submitCode()">Submit</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
