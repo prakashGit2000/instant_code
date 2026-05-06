@@ -3,7 +3,7 @@
 const CONFIG = {
 
   API_URL:
-  "https://script.google.com/macros/s/AKfycbxsgdm8qS-lz4I4Q9903PedE5kFwAlz5rXsrWU-92a59BOoXur3OAQ3g1E-LrD0Rr2_pQ/exec"
+  "https://script.google.com/macros/s/AKfycbwKBSGohYwlR0lOzhhITyhOB3piX6QgF2TniOilV9GGGxxkgRrzJxv4WLOEj9GGJJ0n1A/exec"
 
 };
 
@@ -189,14 +189,12 @@ function loadQuestion() {
       <div class="sample-box">
 
         <b>Input:</b>
-        <br>
-        ${s.input}
 
-        <br><br>
+        <pre>${s.input}</pre>
 
         <b>Output:</b>
-        <br>
-        ${s.output}
+
+        <pre>${s.output}</pre>
 
       </div>
       `;
@@ -304,7 +302,7 @@ function runCode() {
     editor.getValue();
 
   document.getElementById("output").innerText =
-    "Compiling...";
+    "Running Hidden Test Cases...";
 
   fetch(CONFIG.API_URL, {
 
@@ -340,19 +338,42 @@ function runCode() {
       return;
     }
 
-    if(
-      data.output &&
-      data.output.includes("Unauthorized")
-    ){
+    let outputText = "";
 
-      alert(
-        "JDoodle Unauthorized Request\n\nCheck Script Properties"
-      );
+    outputText +=
+      data.output + "\n\n";
+
+    if(data.details){
+
+      data.details.forEach((t,index) => {
+
+        outputText +=
+          "Test Case " +
+          (index + 1) +
+          " : " +
+          (t.passed ? "PASS" : "FAIL") +
+          "\n";
+
+        if(!t.passed){
+
+          outputText +=
+            "Expected Output:\n" +
+            t.expected +
+            "\n\n";
+
+          outputText +=
+            "Your Output:\n" +
+            t.output +
+            "\n\n";
+
+        }
+
+      });
 
     }
 
     document.getElementById("output").innerText =
-      data.output || "No Output";
+      outputText;
 
   })
   .catch(err => {
@@ -417,8 +438,39 @@ function submitCode() {
       return;
     }
 
+    let finalText = "";
+
+    finalText +=
+      "Marks: " +
+      data.marks +
+      "/" +
+      data.total +
+      "\n\n";
+
+    finalText +=
+      "Passed Hidden Test Cases: " +
+      data.passed +
+      "/" +
+      data.totalCases +
+      "\n\n";
+
+    if(data.testcaseResults){
+
+      data.testcaseResults.forEach((t,index) => {
+
+        finalText +=
+          "Test Case " +
+          (index + 1) +
+          " : " +
+          (t.passed ? "PASS" : "FAIL") +
+          "\n";
+
+      });
+
+    }
+
     document.getElementById("output").innerText =
-      `Marks: ${data.marks}/${data.total}`;
+      finalText;
 
     alert(
       `Marks: ${data.marks}/${data.total}`
