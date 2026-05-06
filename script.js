@@ -3,7 +3,7 @@
 const CONFIG = {
 
   API_URL:
-  "https://script.google.com/macros/s/AKfycbwKBSGohYwlR0lOzhhITyhOB3piX6QgF2TniOilV9GGGxxkgRrzJxv4WLOEj9GGJJ0n1A/exec"
+  "https://script.google.com/macros/s/AKfycbzLyi2PVVY096pckCobk2PIreqCj2yvkg0_4AKYrMjtUTnS6FC-wtbMymdBfxG7RozMrA/exec"
 
 };
 
@@ -302,7 +302,7 @@ function runCode() {
     editor.getValue();
 
   document.getElementById("output").innerText =
-    "Running Hidden Test Cases...";
+    "Compiling...";
 
   fetch(CONFIG.API_URL, {
 
@@ -328,49 +328,81 @@ function runCode() {
   .then(res => res.json())
   .then(data => {
 
-    if(data.error){
+    let outputText = "";
 
-      alert(data.error);
+    // COMPILER ERROR
+    if (!data.success) {
+
+      outputText +=
+        "COMPILER ERROR\n\n";
+
+      outputText +=
+        data.compilerError;
 
       document.getElementById("output").innerText =
-        data.error;
+        outputText;
 
       return;
     }
 
-    let outputText = "";
+    // SAMPLE RESULTS
+    outputText +=
+      "SAMPLE TEST CASES\n";
 
     outputText +=
-      data.output + "\n\n";
+      "Passed: " +
+      data.samplePassed +
+      "/" +
+      data.sampleTotal +
+      "\n\n";
 
-    if(data.details){
+    data.sampleResults.forEach((t,index) => {
 
-      data.details.forEach((t,index) => {
+      outputText +=
+        "Sample Test Case " +
+        (index + 1) +
+        " : " +
+        (t.passed ? "PASS" : "FAIL") +
+        "\n";
 
-        outputText +=
-          "Test Case " +
-          (index + 1) +
-          " : " +
-          (t.passed ? "PASS" : "FAIL") +
-          "\n";
+      outputText +=
+        "Input:\n" +
+        t.input +
+        "\n\n";
 
-        if(!t.passed){
+      outputText +=
+        "Expected:\n" +
+        t.expected +
+        "\n\n";
 
-          outputText +=
-            "Expected Output:\n" +
-            t.expected +
-            "\n\n";
+      outputText +=
+        "Your Output:\n" +
+        t.output +
+        "\n\n";
 
-          outputText +=
-            "Your Output:\n" +
-            t.output +
-            "\n\n";
+    });
 
-        }
+    // HIDDEN RESULTS
+    outputText +=
+      "\nHIDDEN TEST CASES\n";
 
-      });
+    outputText +=
+      "Passed: " +
+      data.hiddenPassed +
+      "/" +
+      data.hiddenTotal +
+      "\n\n";
 
-    }
+    data.hiddenResults.forEach((t,index) => {
+
+      outputText +=
+        "Hidden Test Case " +
+        (index + 1) +
+        " : " +
+        (t.passed ? "PASS" : "FAIL") +
+        "\n";
+
+    });
 
     document.getElementById("output").innerText =
       outputText;
@@ -380,12 +412,8 @@ function runCode() {
 
     console.log(err);
 
-    alert(
-      "Compilation Failed"
-    );
-
     document.getElementById("output").innerText =
-      "Compilation Failed";
+      err.toString();
 
   });
 
