@@ -19,13 +19,23 @@ let timerInterval;
 
 let currentQuestionId = "";
 
-window.onload = function(){
+window.onload = function () {
 
   editor = ace.edit("editor");
 
   editor.setTheme("ace/theme/monokai");
 
   editor.session.setMode("ace/mode/java");
+
+  editor.setOptions({
+
+    fontSize: "16px",
+
+    enableBasicAutocompletion: true,
+
+    enableLiveAutocompletion: true
+
+  });
 
   editor.setValue(
 `public class Main {
@@ -39,26 +49,36 @@ window.onload = function(){
 }`
   );
 
+  editor.clearSelection();
+
 };
 
-function startTest(){
+function startTest() {
 
-  emailGlobal = document.getElementById("email").value;
+  emailGlobal =
+    document.getElementById("email").value.trim();
 
-  if(emailGlobal.trim() === ""){
+  if (emailGlobal === "") {
 
     alert("Enter Email");
 
     return;
   }
 
+  document.getElementById("output").innerText =
+    "Loading Questions...";
+
   fetch(CONFIG.API_URL, {
 
-    method:"POST",
+    method: "POST",
 
-    body:JSON.stringify({
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
 
-      action:"getQuestions"
+    body: JSON.stringify({
+
+      action: "getQuestions"
 
     })
 
@@ -72,32 +92,52 @@ function startTest(){
 
     loadQuestion();
 
+  })
+  .catch(err => {
+
+    console.log(err);
+
+    document.getElementById("output").innerText =
+      "Backend Connection Failed";
+
   });
 
 }
 
-function loadQuestion(){
+function loadQuestion() {
 
-  if(currentIndex >= questions.length){
+  if (currentIndex >= questions.length) {
+
+    clearInterval(timerInterval);
 
     alert("Test Completed");
+
+    document.getElementById("output").innerText =
+      "All Questions Completed";
 
     return;
   }
 
   currentQuestionId = questions[currentIndex];
 
+  document.getElementById("output").innerText =
+    "Loading Question...";
+
   fetch(CONFIG.API_URL, {
 
-    method:"POST",
+    method: "POST",
 
-    body:JSON.stringify({
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
 
-      action:"start",
+    body: JSON.stringify({
 
-      email:emailGlobal,
+      action: "start",
 
-      qid:currentQuestionId
+      email: emailGlobal,
+
+      qid: currentQuestionId
 
     })
 
@@ -105,9 +145,7 @@ function loadQuestion(){
   .then(res => res.json())
   .then(data => {
 
-    if(!data.allowed){
-
-      alert("Not Allowed / Already Submitted");
+    if (!data.allowed) {
 
       currentIndex++;
 
@@ -120,7 +158,7 @@ function loadQuestion(){
       data.problem;
 
     document.getElementById("questionNumber").innerText =
-      "Question: " + currentQuestionId;
+      "Question ID: " + currentQuestionId;
 
     document.getElementById("questionText").innerText =
       data.problem;
@@ -147,18 +185,27 @@ function loadQuestion(){
 
     });
 
-    document.getElementById("samples").innerHTML = html;
+    document.getElementById("samples").innerHTML =
+      html;
 
     startTimer(data.time * 60);
 
     document.getElementById("output").innerText =
       "Question Loaded Successfully";
 
+  })
+  .catch(err => {
+
+    console.log(err);
+
+    document.getElementById("output").innerText =
+      "Question Loading Failed";
+
   });
 
 }
 
-function startTimer(seconds){
+function startTimer(seconds) {
 
   clearInterval(timerInterval);
 
@@ -172,18 +219,20 @@ function startTimer(seconds){
 
     updateTimer(timeLeft);
 
-    if(timeLeft <= 0){
+    if (timeLeft <= 0) {
 
       clearInterval(timerInterval);
+
+      alert("Time Up");
 
       submitCode();
     }
 
-  },1000);
+  }, 1000);
 
 }
 
-function updateTimer(seconds){
+function updateTimer(seconds) {
 
   let min = Math.floor(seconds / 60);
 
@@ -198,30 +247,23 @@ function updateTimer(seconds){
 
 }
 
-function getLanguageVersion(language){
+function getAceMode(language) {
 
-  if(language === "java") return "5";
+  if (language === "java")
+    return "ace/mode/java";
 
-  if(language === "python3") return "4";
+  if (language === "python3")
+    return "ace/mode/python";
 
-  if(language === "cpp17") return "0";
-
-}
-
-function getAceMode(language){
-
-  if(language === "java") return "ace/mode/java";
-
-  if(language === "python3") return "ace/mode/python";
-
-  if(language === "cpp17") return "ace/mode/c_cpp";
+  if (language === "cpp17")
+    return "ace/mode/c_cpp";
 
 }
 
 document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("language")
-  .addEventListener("change", function(){
+  .addEventListener("change", function () {
 
     editor.session.setMode(
       getAceMode(this.value)
@@ -231,31 +273,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-function runCode(){
+function runCode() {
 
   const language =
     document.getElementById("language").value;
 
-  const code = editor.getValue();
+  const code =
+    editor.getValue();
 
   document.getElementById("output").innerText =
     "Compiling...";
 
   fetch(CONFIG.API_URL, {
 
-    method:"POST",
+    method: "POST",
 
-    body:JSON.stringify({
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
 
-      action:"submit",
+    body: JSON.stringify({
 
-      email:"compile@temp.com",
+      action: "compile",
 
-      qid:currentQuestionId,
+      code: code,
 
-      code:code,
+      language: language,
 
-      language:language
+      qid: currentQuestionId
 
     })
 
@@ -264,43 +309,50 @@ function runCode(){
   .then(data => {
 
     document.getElementById("output").innerText =
-      `Passed: ${data.marks}/${data.total}`;
+      data.output || "No Output";
 
   })
   .catch(err => {
 
+    console.log(err);
+
     document.getElementById("output").innerText =
-      err;
+      "Compilation Failed";
 
   });
 
 }
 
-function submitCode(){
+function submitCode() {
 
   const language =
     document.getElementById("language").value;
 
-  const code = editor.getValue();
+  const code =
+    editor.getValue();
 
   document.getElementById("output").innerText =
     "Submitting...";
 
   fetch(CONFIG.API_URL, {
 
-    method:"POST",
+    method: "POST",
 
-    body:JSON.stringify({
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
 
-      action:"submit",
+    body: JSON.stringify({
 
-      email:emailGlobal,
+      action: "submit",
 
-      qid:currentQuestionId,
+      email: emailGlobal,
 
-      code:code,
+      qid: currentQuestionId,
 
-      language:language
+      code: code,
+
+      language: language
 
     })
 
@@ -308,18 +360,34 @@ function submitCode(){
   .then(res => res.json())
   .then(data => {
 
+    if (data.error) {
+
+      document.getElementById("output").innerText =
+        data.error;
+
+      return;
+    }
+
     document.getElementById("output").innerText =
-      `Final Score: ${data.marks}/${data.total}`;
+      `Marks: ${data.marks}/${data.total}`;
 
     alert(
       `Marks: ${data.marks}/${data.total}`
     );
 
+  })
+  .catch(err => {
+
+    console.log(err);
+
+    document.getElementById("output").innerText =
+      "Submission Failed";
+
   });
 
 }
 
-function nextQuestion(){
+function nextQuestion() {
 
   currentIndex++;
 
