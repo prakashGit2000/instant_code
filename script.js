@@ -304,7 +304,7 @@ function runCode() {
     editor.getValue();
 
   document.getElementById("output").innerText =
-    "Compiling...";
+    "Running Hidden Test Cases...";
 
   fetch(CONFIG.API_URL, {
 
@@ -346,13 +346,51 @@ function runCode() {
     ){
 
       alert(
-        "JDoodle Unauthorized Request\n\nCheck Script Properties"
+        "JDoodle Unauthorized Request\n\nCheck CLIENT_ID and CLIENT_SECRET"
       );
+
+      document.getElementById("output").innerText =
+        data.output;
+
+      return;
+    }
+
+    let outputText = "";
+
+    outputText +=
+      data.output + "\n\n";
+
+    if(data.details){
+
+      data.details.forEach((t,index) => {
+
+        outputText +=
+          "Test Case " +
+          (index + 1) +
+          " : " +
+          (t.passed ? "PASS" : "FAIL") +
+          "\n";
+
+        if(!t.passed){
+
+          outputText +=
+            "Expected : " +
+            t.expected +
+            "\n";
+
+          outputText +=
+            "Your Output : " +
+            t.output +
+            "\n\n";
+
+        }
+
+      });
 
     }
 
     document.getElementById("output").innerText =
-      data.output || "No Output";
+      outputText;
 
   })
   .catch(err => {
