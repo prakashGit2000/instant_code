@@ -1,5 +1,3 @@
-// script.js
-
 const CONFIG = {
 
   SHEET_ID: "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec",
@@ -69,26 +67,37 @@ function startTest() {
 
     currentQuestion = data;
 
-    document.getElementById("questionTitle").innerText = data.title;
+    document.getElementById("questionTitle").innerText = data.title || "Coding Question";
 
-    document.getElementById("questionText").innerText = data.problem;
+    document.getElementById("questionText").innerText = data.problem || "";
 
     let sampleHTML = "";
 
-    data.samples.forEach(s => {
+    if(data.samples){
 
-      sampleHTML += `
-      <div class="sample-box">
-        <b>Input:</b><br>${s.input}<br><br>
-        <b>Output:</b><br>${s.output}
-      </div>
-      `;
+      data.samples.forEach(s => {
 
-    });
+        sampleHTML += `
+        <div class="sample-box">
+          <b>Input:</b><br>${s.input}<br><br>
+          <b>Output:</b><br>${s.output}
+        </div>
+        `;
+
+      });
+
+    }
 
     document.getElementById("samples").innerHTML = sampleHTML;
 
-    startTimer(data.time);
+    startTimer(data.time || 300);
+
+  })
+  .catch(err => {
+
+    console.log(err);
+
+    alert("Backend Error");
 
   });
 
@@ -155,9 +164,19 @@ function getAceMode(language){
 
 }
 
-document.getElementById("language").addEventListener("change", function(){
+document.addEventListener("DOMContentLoaded", () => {
 
-  editor.session.setMode(getAceMode(this.value));
+  const lang = document.getElementById("language");
+
+  if(lang){
+
+    lang.addEventListener("change", function(){
+
+      editor.session.setMode(getAceMode(this.value));
+
+    });
+
+  }
 
 });
 
@@ -196,7 +215,7 @@ function runCode(){
   .then(data => {
 
     document.getElementById("output").innerText =
-      data.output || data.error;
+      data.output || data.error || "No Output";
 
   })
   .catch(err => {
@@ -225,8 +244,6 @@ function submitCode(){
 
       email:email,
 
-      questionId:currentQuestion.id,
-
       language:language,
 
       code:code
@@ -239,30 +256,11 @@ function submitCode(){
 
     alert("Code Submitted Successfully");
 
+  })
+  .catch(err => {
+
+    console.log(err);
+
   });
 
 }
-
-setInterval(() => {
-
-  const email = document.getElementById("email").value;
-
-  if(email.trim() === "") return;
-
-  fetch(CONFIG.SHEET_ID, {
-
-    method:"POST",
-
-    body:JSON.stringify({
-
-      action:"autosave",
-
-      email:email,
-
-      code:editor.getValue()
-
-    })
-
-  });
-
-},5000);
