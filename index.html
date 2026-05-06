@@ -1,79 +1,158 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Prakash Sir Coding Platform</title>
 
   <link rel="stylesheet" href="style.css">
 
+  <link rel="icon" href="data:,">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+
 </head>
 
 <body>
 
-<div class="topbar">
-  <div class="logo">Prakash Sir Coding Platform</div>
+  <div class="topbar">
 
-  <div class="student-box">
-    <input type="email" id="email" placeholder="Enter Email">
-    <button onclick="startTest()">Start Test</button>
+    <div class="logo">
+      Prakash Sir Coding Platform
+    </div>
+
+    <div class="student-box">
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter Email"
+      >
+
+      <button onclick="startTest()">
+        Start Test
+      </button>
+
+    </div>
+
   </div>
-</div>
 
-<div class="main">
+  <div class="main">
 
-  <div class="left-panel">
+    <!-- LEFT PANEL -->
 
-    <div class="question-card">
+    <div class="left-panel">
 
-      <div class="question-header">
-        <h2 id="questionTitle">Coding Question</h2>
-        <div id="timer">00:00</div>
+      <div class="question-card">
+
+        <div class="question-header">
+
+          <h2 id="questionTitle">
+            Coding Question
+          </h2>
+
+          <div id="timer">
+            00:00
+          </div>
+
+        </div>
+
+        <div
+          id="questionText"
+          class="question-text"
+        >
+          Click Start Test to load question.
+        </div>
+
+        <div class="section-title">
+          Sample Test Cases
+        </div>
+
+        <div id="samples">
+
+          <div class="sample-box">
+
+            <b>Input:</b>
+            <br>
+            2 3
+
+            <br><br>
+
+            <b>Output:</b>
+            <br>
+            5
+
+          </div>
+
+        </div>
+
       </div>
 
-      <div id="questionText" class="question-text"></div>
+    </div>
 
-      <div class="section-title">Sample Test Cases</div>
+    <!-- RIGHT PANEL -->
 
-      <div id="samples"></div>
+    <div class="right-panel">
+
+      <div class="editor-toolbar">
+
+        <select id="language">
+
+          <option value="java">
+            Java
+          </option>
+
+          <option value="python3">
+            Python
+          </option>
+
+          <option value="cpp17">
+            C++
+          </option>
+
+        </select>
+
+        <button onclick="runCode()">
+          Compile
+        </button>
+
+        <button
+          class="submit-btn"
+          onclick="submitCode()"
+        >
+          Submit
+        </button>
+
+      </div>
+
+      <!-- IMPORTANT -->
+
+      <div id="editor"></div>
+
+      <div class="console">
+
+        <div class="console-title">
+          Console Output
+        </div>
+
+        <pre id="output">
+Ready...
+        </pre>
+
+      </div>
 
     </div>
 
   </div>
 
-  <div class="right-panel">
+  <!-- IMPORTANT -->
 
-    <div class="editor-toolbar">
-
-      <select id="language">
-        <option value="java">Java</option>
-        <option value="python3">Python</option>
-        <option value="cpp17">C++</option>
-      </select>
-
-      <button onclick="runCode()">Compile</button>
-
-      <button class="submit-btn" onclick="submitCode()">Submit</button>
-
-    </div>
-
-    <div id="editor"></div>
-
-    <div class="console">
-
-      <div class="console-title">Console Output</div>
-
-      <pre id="output"></pre>
-
-    </div>
-
-  </div>
-
-</div>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 
 </body>
+
 </html>
