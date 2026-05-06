@@ -3,7 +3,7 @@
 const CONFIG = {
 
   API_URL:
-  "https://script.google.com/macros/s/AKfycbyW8sGRNJDUpkBSxZBf5boGp0ru0wampdbVHQNuVxQ5td__KVNm3YYoZO9At6GOjDJi9w/exec"
+  "https://script.google.com/macros/s/AKfycbx96Myi3ECvANNojums3P0qZmHCpPlVZTQznpkJ0lT4fGF98IJHJbDjCJ8ltQFS01RoBA/exec"
 
 };
 
@@ -438,8 +438,13 @@ function runCode() {
 
     console.log(err);
 
+
     document.getElementById("output").innerText =
-      err.toString();
+  "Compilation Failed\n\n" +
+  err.toString();
+
+    
+  
 
   });
 
