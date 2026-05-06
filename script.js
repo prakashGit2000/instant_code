@@ -1,114 +1,268 @@
+// script.js
 
-const SHEET_ID = "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec";
+const CONFIG = {
 
-function doPost(e) {
+  SHEET_ID: "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec",
 
-  const ss = SpreadsheetApp.openById(SHEET_ID);
+  JDOODLE_CLIENT_ID: "9491bccf73d58219a773cb4b36d7432a",
 
-  const data = JSON.parse(e.postData.contents);
+  JDOODLE_CLIENT_SECRET: "ab5635380d4487d3a48432cf97441ba083d0c06fb836660ec5ce6d6b70675e40"
 
-  const questionsSheet = ss.getSheetByName("Questions");
-  const attemptsSheet = ss.getSheetByName("Attempts");
-  const allowedSheet = ss.getSheetByName("Allowed");
+};
 
-  const questions = questionsSheet.getDataRange().getValues();
-  const attempts = attemptsSheet.getDataRange().getValues();
-  const allowed = allowedSheet.getDataRange().getValues();
+let editor;
 
-  if (data.action === "getQuestions") {
+let currentQuestion = null;
 
-    let qids = [];
+let timerInterval;
 
-    for (let i = 1; i < questions.length; i++) {
-      qids.push(questions[i][0]);
+let timeLeft = 0;
+
+window.onload = function () {
+
+  editor = ace.edit("editor");
+
+  editor.setTheme("ace/theme/monokai");
+
+  editor.session.setMode("ace/mode/java");
+
+  editor.setValue(
+`public class Main {
+
+    public static void main(String[] args) {
+
+        System.out.println("Hello World");
+
     }
 
-    return jsonOutput(qids);
+}`
+  );
+
+};
+
+function startTest() {
+
+  const email = document.getElementById("email").value;
+
+  if(email.trim() === ""){
+
+    alert("Enter Email");
+
+    return;
   }
 
-  if (data.action === "start") {
+  fetch(CONFIG.SHEET_ID, {
 
-    let emailAllowed = false;
+    method:"POST",
 
-    for (let i = 1; i < allowed.length; i++) {
-      if (allowed[i][0] === data.email) {
-        emailAllowed = true;
-      }
-    }
+    body:JSON.stringify({
 
-    if (!emailAllowed) {
-      return jsonOutput({
-        allowed: false
-      });
-    }
+      action:"getQuestion",
 
-    for (let i = 1; i < attempts.length; i++) {
-      if (
-        attempts[i][0] === data.email &&
-        attempts[i][1] === data.qid
-      ) {
-        return jsonOutput({
-          allowed: false
-        });
-      }
-    }
+      email:email
 
-    for (let i = 1; i < questions.length; i++) {
+    })
 
-      if (questions[i][0] === data.qid) {
+  })
+  .then(res => res.json())
+  .then(data => {
 
-        const sampleString = questions[i][2];
+    currentQuestion = data;
 
-        const sampleParts = sampleString.split("|");
+    document.getElementById("questionTitle").innerText = data.title;
 
-        let samples = [];
+    document.getElementById("questionText").innerText = data.problem;
 
-        sampleParts.forEach(s => {
+    let sampleHTML = "";
 
-          const temp = s.split("=");
+    data.samples.forEach(s => {
 
-          samples.push({
-            input: temp[0],
-            output: temp[1]
-          });
+      sampleHTML += `
+      <div class="sample-box">
+        <b>Input:</b><br>${s.input}<br><br>
+        <b>Output:</b><br>${s.output}
+      </div>
+      `;
 
-        });
-
-        return jsonOutput({
-          allowed: true,
-          problem: questions[i][1],
-          samples: samples,
-          time: questions[i][3]
-        });
-      }
-    }
-  }
-
-  if (data.action === "submit") {
-
-    attemptsSheet.appendRow([
-      data.email,
-      data.qid,
-      data.code,
-      data.language,
-      0,
-      new Date()
-    ]);
-
-    return jsonOutput({
-      marks: 0,
-      total: 100
     });
-  }
 
-  return jsonOutput({
-    error: "Invalid Action"
+    document.getElementById("samples").innerHTML = sampleHTML;
+
+    startTimer(data.time);
+
   });
+
 }
 
-function jsonOutput(obj) {
+function startTimer(seconds){
 
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+  clearInterval(timerInterval);
+
+  timeLeft = seconds;
+
+  updateTimer();
+
+  timerInterval = setInterval(() => {
+
+    timeLeft--;
+
+    updateTimer();
+
+    if(timeLeft <= 0){
+
+      clearInterval(timerInterval);
+
+      alert("Time Up");
+
+      submitCode();
+    }
+
+  },1000);
+
 }
+
+function updateTimer(){
+
+  let min = Math.floor(timeLeft / 60);
+
+  let sec = timeLeft % 60;
+
+  min = min < 10 ? "0" + min : min;
+
+  sec = sec < 10 ? "0" + sec : sec;
+
+  document.getElementById("timer").innerText = `${min}:${sec}`;
+
+}
+
+function getLanguageVersion(language){
+
+  if(language === "java") return "5";
+
+  if(language === "python3") return "4";
+
+  if(language === "cpp17") return "0";
+
+}
+
+function getAceMode(language){
+
+  if(language === "java") return "ace/mode/java";
+
+  if(language === "python3") return "ace/mode/python";
+
+  if(language === "cpp17") return "ace/mode/c_cpp";
+
+}
+
+document.getElementById("language").addEventListener("change", function(){
+
+  editor.session.setMode(getAceMode(this.value));
+
+});
+
+function runCode(){
+
+  const language = document.getElementById("language").value;
+
+  const code = editor.getValue();
+
+  document.getElementById("output").innerText = "Compiling...";
+
+  fetch("https://api.jdoodle.com/v1/execute", {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+
+      clientId:CONFIG.JDOODLE_CLIENT_ID,
+
+      clientSecret:CONFIG.JDOODLE_CLIENT_SECRET,
+
+      script:code,
+
+      language:language,
+
+      versionIndex:getLanguageVersion(language)
+
+    })
+
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    document.getElementById("output").innerText =
+      data.output || data.error;
+
+  })
+  .catch(err => {
+
+    document.getElementById("output").innerText = err;
+
+  });
+
+}
+
+function submitCode(){
+
+  const email = document.getElementById("email").value;
+
+  const language = document.getElementById("language").value;
+
+  const code = editor.getValue();
+
+  fetch(CONFIG.SHEET_ID, {
+
+    method:"POST",
+
+    body:JSON.stringify({
+
+      action:"submit",
+
+      email:email,
+
+      questionId:currentQuestion.id,
+
+      language:language,
+
+      code:code
+
+    })
+
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    alert("Code Submitted Successfully");
+
+  });
+
+}
+
+setInterval(() => {
+
+  const email = document.getElementById("email").value;
+
+  if(email.trim() === "") return;
+
+  fetch(CONFIG.SHEET_ID, {
+
+    method:"POST",
+
+    body:JSON.stringify({
+
+      action:"autosave",
+
+      email:email,
+
+      code:editor.getValue()
+
+    })
+
+  });
+
+},5000);
