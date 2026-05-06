@@ -1,36 +1,79 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Prakash Sir Coding Test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prakash Sir Coding Platform</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
 </head>
+
 <body>
 
-<div class="container">
-  <h2>Coding Test</h2>
+<div class="topbar">
+  <div class="logo">Prakash Sir Coding Platform</div>
 
-  <input type="email" id="email" placeholder="Enter Email">
-  <button onclick="startTest()">Start</button>
-
-  <div id="questionBox" class="hidden">
-    <h3 id="question"></h3>
-
-    <div id="samples"></div>
-
-    <select id="language">
-      <option value="java">Java</option>
-      <option value="python3">Python</option>
-      <option value="cpp17">C++</option>
-    </select>
-
-    <textarea id="code" placeholder="Write your code here..."></textarea>
-
-    <div id="timer"></div>
-
-    <button id="submitBtn" onclick="submitCode()">Submit</button>
+  <div class="student-box">
+    <input type="email" id="email" placeholder="Enter Email">
+    <button onclick="startTest()">Start Test</button>
   </div>
 </div>
 
+<div class="main">
+
+  <div class="left-panel">
+
+    <div class="question-card">
+
+      <div class="question-header">
+        <h2 id="questionTitle">Coding Question</h2>
+        <div id="timer">00:00</div>
+      </div>
+
+      <div id="questionText" class="question-text"></div>
+
+      <div class="section-title">Sample Test Cases</div>
+
+      <div id="samples"></div>
+
+    </div>
+
+  </div>
+
+  <div class="right-panel">
+
+    <div class="editor-toolbar">
+
+      <select id="language">
+        <option value="java">Java</option>
+        <option value="python3">Python</option>
+        <option value="cpp17">C++</option>
+      </select>
+
+      <button onclick="runCode()">Compile</button>
+
+      <button class="submit-btn" onclick="submitCode()">Submit</button>
+
+    </div>
+
+    <div id="editor"></div>
+
+    <div class="console">
+
+      <div class="console-title">Console Output</div>
+
+      <pre id="output"></pre>
+
+    </div>
+
+  </div>
+
+</div>
+
 <script src="script.js"></script>
+
 </body>
 </html>
