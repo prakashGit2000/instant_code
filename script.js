@@ -1,90 +1,114 @@
-const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec"
-};
 
-let questions = [];
-let currentIndex = 0;
-let emailGlobal = "";
+const SHEET_ID = "https://script.google.com/macros/s/AKfycbyCJWvSfe1N0tzvNHjs6zYLeGT0u0hoosap4KY4pimlxpWIiCCEf2Bv_sPMdjMZJT3SjA/exec";
 
-function startTest() {
-  emailGlobal = document.getElementById("email").value;
+function doPost(e) {
 
-  fetch(CONFIG.API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "getQuestions" })
-  })
-  .then(res => res.json())
-  .then(qList => {
-    questions = qList;
-    loadQuestion();
-  });
-}
+  const ss = SpreadsheetApp.openById(SHEET_ID);
 
-function loadQuestion() {
-  let qid = questions[currentIndex];
+  const data = JSON.parse(e.postData.contents);
 
-  fetch(CONFIG.API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "start",
-      email: emailGlobal,
-      qid: qid
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
+  const questionsSheet = ss.getSheetByName("Questions");
+  const attemptsSheet = ss.getSheetByName("Attempts");
+  const allowedSheet = ss.getSheetByName("Allowed");
 
-    if (!data.allowed) {
-      alert("Not allowed or already attempted");
-      return;
+  const questions = questionsSheet.getDataRange().getValues();
+  const attempts = attemptsSheet.getDataRange().getValues();
+  const allowed = allowedSheet.getDataRange().getValues();
+
+  if (data.action === "getQuestions") {
+
+    let qids = [];
+
+    for (let i = 1; i < questions.length; i++) {
+      qids.push(questions[i][0]);
     }
 
-    document.getElementById("questionBox").classList.remove("hidden");
-    document.getElementById("question").innerText = data.problem;
+    return jsonOutput(qids);
+  }
 
-    let sampleHTML = "";
-    data.samples.forEach(s => {
-      sampleHTML += `<p>${s.input} → ${s.output}</p>`;
+  if (data.action === "start") {
+
+    let emailAllowed = false;
+
+    for (let i = 1; i < allowed.length; i++) {
+      if (allowed[i][0] === data.email) {
+        emailAllowed = true;
+      }
+    }
+
+    if (!emailAllowed) {
+      return jsonOutput({
+        allowed: false
+      });
+    }
+
+    for (let i = 1; i < attempts.length; i++) {
+      if (
+        attempts[i][0] === data.email &&
+        attempts[i][1] === data.qid
+      ) {
+        return jsonOutput({
+          allowed: false
+        });
+      }
+    }
+
+    for (let i = 1; i < questions.length; i++) {
+
+      if (questions[i][0] === data.qid) {
+
+        const sampleString = questions[i][2];
+
+        const sampleParts = sampleString.split("|");
+
+        let samples = [];
+
+        sampleParts.forEach(s => {
+
+          const temp = s.split("=");
+
+          samples.push({
+            input: temp[0],
+            output: temp[1]
+          });
+
+        });
+
+        return jsonOutput({
+          allowed: true,
+          problem: questions[i][1],
+          samples: samples,
+          time: questions[i][3]
+        });
+      }
+    }
+  }
+
+  if (data.action === "submit") {
+
+    attemptsSheet.appendRow([
+      data.email,
+      data.qid,
+      data.code,
+      data.language,
+      0,
+      new Date()
+    ]);
+
+    return jsonOutput({
+      marks: 0,
+      total: 100
     });
+  }
 
-    document.getElementById("samples").innerHTML = sampleHTML;
-
-    startTimer(data.time);
+  return jsonOutput({
+    error: "Invalid Action"
   });
 }
 
-function submitCode() {
-  let code = document.getElementById("code").value;
-  let lang = document.getElementById("language").value;
+function jsonOutput(obj) {
 
-  let qid = questions[currentIndex];
-
-  fetch(CONFIG.API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "submit",
-      email: emailGlobal,
-      qid: qid,
-      code: code,
-      language: lang
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-
-    if (data.error) {
-      alert(data.error);
-      return;
-    }
-
-    alert(`Marks: ${data.marks}/${data.total}`);
-
-    currentIndex++;
-
-    if (currentIndex < questions.length) {
-      loadQuestion();
-    } else {
-      alert("Test Completed 🎉");
-    }
-  });
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
