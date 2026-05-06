@@ -29,11 +29,7 @@ window.onload = function () {
 
   editor.setOptions({
 
-    fontSize: "16px",
-
-    enableBasicAutocompletion: true,
-
-    enableLiveAutocompletion: true
+    fontSize: "16px"
 
   });
 
@@ -86,6 +82,13 @@ function startTest() {
   .then(res => res.json())
   .then(data => {
 
+    if(data.error){
+
+      alert(data.error);
+
+      return;
+    }
+
     questions = data;
 
     currentIndex = 0;
@@ -96,6 +99,10 @@ function startTest() {
   .catch(err => {
 
     console.log(err);
+
+    alert(
+      "Backend Connection Failed"
+    );
 
     document.getElementById("output").innerText =
       "Backend Connection Failed";
@@ -145,7 +152,18 @@ function loadQuestion() {
   .then(res => res.json())
   .then(data => {
 
+    if(data.error){
+
+      alert(data.error);
+
+      return;
+    }
+
     if (!data.allowed) {
+
+      alert(
+        "Not Allowed / Already Submitted"
+      );
 
       currentIndex++;
 
@@ -197,6 +215,10 @@ function loadQuestion() {
   .catch(err => {
 
     console.log(err);
+
+    alert(
+      "Question Loading Failed"
+    );
 
     document.getElementById("output").innerText =
       "Question Loading Failed";
@@ -308,6 +330,27 @@ function runCode() {
   .then(res => res.json())
   .then(data => {
 
+    if(data.error){
+
+      alert(data.error);
+
+      document.getElementById("output").innerText =
+        data.error;
+
+      return;
+    }
+
+    if(
+      data.output &&
+      data.output.includes("Unauthorized")
+    ){
+
+      alert(
+        "JDoodle Unauthorized Request\n\nCheck Script Properties"
+      );
+
+    }
+
     document.getElementById("output").innerText =
       data.output || "No Output";
 
@@ -315,6 +358,10 @@ function runCode() {
   .catch(err => {
 
     console.log(err);
+
+    alert(
+      "Compilation Failed"
+    );
 
     document.getElementById("output").innerText =
       "Compilation Failed";
@@ -362,6 +409,8 @@ function submitCode() {
 
     if (data.error) {
 
+      alert(data.error);
+
       document.getElementById("output").innerText =
         data.error;
 
@@ -379,6 +428,10 @@ function submitCode() {
   .catch(err => {
 
     console.log(err);
+
+    alert(
+      "Submission Failed"
+    );
 
     document.getElementById("output").innerText =
       "Submission Failed";
