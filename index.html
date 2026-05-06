@@ -1,3 +1,5 @@
+<!-- index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -43,7 +45,7 @@
 
   <div class="main">
 
-    <!-- LEFT PANEL -->
+    <!-- LEFT -->
 
     <div class="left-panel">
 
@@ -51,9 +53,17 @@
 
         <div class="question-header">
 
-          <h2 id="questionTitle">
-            Coding Question
-          </h2>
+          <div>
+
+            <h2 id="questionTitle">
+              Coding Question
+            </h2>
+
+            <div id="questionNumber">
+              Question: --
+            </div>
+
+          </div>
 
           <div id="timer">
             00:00
@@ -65,36 +75,20 @@
           id="questionText"
           class="question-text"
         >
-          Click Start Test to load question.
+          Click Start Test
         </div>
 
         <div class="section-title">
           Sample Test Cases
         </div>
 
-        <div id="samples">
-
-          <div class="sample-box">
-
-            <b>Input:</b>
-            <br>
-            2 3
-
-            <br><br>
-
-            <b>Output:</b>
-            <br>
-            5
-
-          </div>
-
-        </div>
+        <div id="samples"></div>
 
       </div>
 
     </div>
 
-    <!-- RIGHT PANEL -->
+    <!-- RIGHT -->
 
     <div class="right-panel">
 
@@ -127,9 +121,11 @@
           Submit
         </button>
 
-      </div>
+        <button onclick="nextQuestion()">
+          Next
+        </button>
 
-      <!-- IMPORTANT -->
+      </div>
 
       <div id="editor"></div>
 
@@ -139,17 +135,13 @@
           Console Output
         </div>
 
-        <pre id="output">
-Ready...
-        </pre>
+        <pre id="output">Ready...</pre>
 
       </div>
 
     </div>
 
   </div>
-
-  <!-- IMPORTANT -->
 
   <script src="script.js"></script>
 
