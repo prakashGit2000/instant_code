@@ -3,11 +3,9 @@
 const CONFIG = {
 
   API_URL:
-  "https://script.google.com/macros/s/AKfycbx96Myi3ECvANNojums3P0qZmHCpPlVZTQznpkJ0lT4fGF98IJHJbDjCJ8ltQFS01RoBA/exec"
+  "https://script.google.com/macros/s/AKfycbzWlcA-8dUXcqDKrkSeqi8zWe1zgoMJhbCdr32oXwsJpNTFfk0Y36_Vo5IZ57Ww8VN0iA/exec"
 
 };
-
-
 
 let editor;
 
@@ -346,7 +344,6 @@ function runCode() {
 
     let outputText = "";
 
-    // COMPILER ERROR
     if (!data.success) {
 
       outputText +=
@@ -354,6 +351,7 @@ function runCode() {
 
       outputText +=
         data.compilerError ||
+        data.runtimeError ||
         data.error ||
         "Compilation Failed";
 
@@ -363,7 +361,6 @@ function runCode() {
       return;
     }
 
-    // SAMPLE RESULTS
     outputText +=
       "SAMPLE TEST CASES\n";
 
@@ -387,24 +384,23 @@ function runCode() {
 
         outputText +=
           "Input:\n" +
-          t.input +
+          (t.input || "") +
           "\n\n";
 
         outputText +=
           "Expected:\n" +
-          t.expected +
+          (t.expected || "") +
           "\n\n";
 
         outputText +=
           "Your Output:\n" +
-          t.output +
+          (t.output || "") +
           "\n\n";
 
       });
 
     }
 
-    // HIDDEN RESULTS
     outputText +=
       "\nHIDDEN TEST CASES\n";
 
@@ -438,13 +434,9 @@ function runCode() {
 
     console.log(err);
 
-
     document.getElementById("output").innerText =
-  "Compilation Failed\n\n" +
-  err.toString();
-
-    
-  
+      "Compilation Failed\n\n" +
+      err.toString();
 
   });
 
@@ -491,6 +483,8 @@ function submitCode() {
 
       document.getElementById("output").innerText =
 
+        data.compilerError ||
+        data.runtimeError ||
         data.error ||
         "Submission Failed";
 
