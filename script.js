@@ -7,6 +7,8 @@ const CONFIG = {
 
 };
 
+
+
 let editor;
 
 let questions = [];
@@ -29,16 +31,24 @@ window.onload = function () {
 
   editor.setOptions({
 
-    fontSize: "16px"
+    fontSize: "16px",
+
+    enableBasicAutocompletion: true,
+
+    enableLiveAutocompletion: true
 
   });
 
   editor.setValue(
-`public class Main {
+`import java.util.*;
+
+public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("Hello World");
+        Scanner sc = new Scanner(System.in);
+
+        
 
     }
 
@@ -125,7 +135,8 @@ function loadQuestion() {
     return;
   }
 
-  currentQuestionId = questions[currentIndex];
+  currentQuestionId =
+    questions[currentIndex];
 
   document.getElementById("output").innerText =
     "Loading Question...";
@@ -162,7 +173,8 @@ function loadQuestion() {
     if (!data.allowed) {
 
       alert(
-        "Not Allowed / Already Submitted"
+        data.error ||
+        "Not Allowed"
       );
 
       currentIndex++;
@@ -190,11 +202,11 @@ function loadQuestion() {
 
         <b>Input:</b>
 
-        <pre>${s.input}</pre>
+        <pre>${escapeHtml(s.input)}</pre>
 
         <b>Output:</b>
 
-        <pre>${s.output}</pre>
+        <pre>${escapeHtml(s.output)}</pre>
 
       </div>
       `;
@@ -214,12 +226,8 @@ function loadQuestion() {
 
     console.log(err);
 
-    alert(
-      "Question Loading Failed"
-    );
-
     document.getElementById("output").innerText =
-      "Question Loading Failed";
+      err.toString();
 
   });
 
@@ -254,13 +262,21 @@ function startTimer(seconds) {
 
 function updateTimer(seconds) {
 
-  let min = Math.floor(seconds / 60);
+  let min =
+    Math.floor(seconds / 60);
 
-  let sec = seconds % 60;
+  let sec =
+    seconds % 60;
 
-  min = min < 10 ? "0" + min : min;
+  min =
+    min < 10
+    ? "0" + min
+    : min;
 
-  sec = sec < 10 ? "0" + sec : sec;
+  sec =
+    sec < 10
+    ? "0" + sec
+    : sec;
 
   document.getElementById("timer").innerText =
     `${min}:${sec}`;
@@ -302,7 +318,7 @@ function runCode() {
     editor.getValue();
 
   document.getElementById("output").innerText =
-    "Compiling...";
+    "Compiling...\nPlease Wait...";
 
   fetch(CONFIG.API_URL, {
 
@@ -337,7 +353,9 @@ function runCode() {
         "COMPILER ERROR\n\n";
 
       outputText +=
-        data.compilerError;
+        data.compilerError ||
+        data.error ||
+        "Compilation Failed";
 
       document.getElementById("output").innerText =
         outputText;
@@ -356,31 +374,35 @@ function runCode() {
       data.sampleTotal +
       "\n\n";
 
-    data.sampleResults.forEach((t,index) => {
+    if(data.sampleResults){
 
-      outputText +=
-        "Sample Test Case " +
-        (index + 1) +
-        " : " +
-        (t.passed ? "PASS" : "FAIL") +
-        "\n";
+      data.sampleResults.forEach((t,index) => {
 
-      outputText +=
-        "Input:\n" +
-        t.input +
-        "\n\n";
+        outputText +=
+          "Sample Test Case " +
+          (index + 1) +
+          " : " +
+          (t.passed ? "PASS" : "FAIL") +
+          "\n";
 
-      outputText +=
-        "Expected:\n" +
-        t.expected +
-        "\n\n";
+        outputText +=
+          "Input:\n" +
+          t.input +
+          "\n\n";
 
-      outputText +=
-        "Your Output:\n" +
-        t.output +
-        "\n\n";
+        outputText +=
+          "Expected:\n" +
+          t.expected +
+          "\n\n";
 
-    });
+        outputText +=
+          "Your Output:\n" +
+          t.output +
+          "\n\n";
+
+      });
+
+    }
 
     // HIDDEN RESULTS
     outputText +=
@@ -393,16 +415,20 @@ function runCode() {
       data.hiddenTotal +
       "\n\n";
 
-    data.hiddenResults.forEach((t,index) => {
+    if(data.hiddenResults){
 
-      outputText +=
-        "Hidden Test Case " +
-        (index + 1) +
-        " : " +
-        (t.passed ? "PASS" : "FAIL") +
-        "\n";
+      data.hiddenResults.forEach((t,index) => {
 
-    });
+        outputText +=
+          "Hidden Test Case " +
+          (index + 1) +
+          " : " +
+          (t.passed ? "PASS" : "FAIL") +
+          "\n";
+
+      });
+
+    }
 
     document.getElementById("output").innerText =
       outputText;
@@ -456,12 +482,12 @@ function submitCode() {
   .then(res => res.json())
   .then(data => {
 
-    if (data.error) {
-
-      alert(data.error);
+    if (!data.success) {
 
       document.getElementById("output").innerText =
-        data.error;
+
+        data.error ||
+        "Submission Failed";
 
       return;
     }
@@ -509,12 +535,8 @@ function submitCode() {
 
     console.log(err);
 
-    alert(
-      "Submission Failed"
-    );
-
     document.getElementById("output").innerText =
-      "Submission Failed";
+      err.toString();
 
   });
 
@@ -525,5 +547,16 @@ function nextQuestion() {
   currentIndex++;
 
   loadQuestion();
+
+}
+
+function escapeHtml(text) {
+
+  if(!text) return "";
+
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
 }
